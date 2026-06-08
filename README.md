@@ -5,7 +5,7 @@
 ## 技术栈
 
 - Node.js + Express
-- SQLite (better-sqlite3)
+- SQLite (sqlite3)
 - Moment.js
 
 ## 启动步骤
@@ -94,7 +94,7 @@ curl http://localhost:3000/api/health
 | POST | /api/faults | 上报故障 |
 | PUT | /api/faults/:id/resolve | 解除故障 |
 | GET | /api/faults | 故障记录列表 |
-| GET | /api/faults/station/:id/pending | 未处理故障 |
+| GET | /api/faults/station/:station_id/unresolved | 未处理故障 |
 
 ### 告警查询
 
@@ -104,36 +104,42 @@ curl http://localhost:3000/api/health
 | GET | /api/alerts/pending | 待处理告警 |
 | GET | /api/alerts/:id | 告警详情 |
 | PUT | /api/alerts/:id/handle | 处理告警 |
-| GET | /api/alerts/statistics/summary | 告警统计 |
+| GET | /api/alerts/statistics | 告警统计 |
 
 ## 示例请求
 
-### 1. 查询泵站列表
+### 1. 健康检查
+
+```bash
+curl http://localhost:3000/api/health
+```
+
+### 2. 查询泵站列表
 
 ```bash
 curl http://localhost:3000/api/stations
 ```
 
-### 2. 值班员签到
+### 3. 值班员签到
 
 ```bash
 curl -X POST http://localhost:3000/api/checkin \
   -H "Content-Type: application/json" \
   -d '{
-    "station_id": 1,
+    "station_id": "PS001",
     "operator_name": "张三",
     "checkin_type": "on_duty",
     "remarks": "白班接班"
   }'
 ```
 
-### 3. 上报水位（超警戒水位，将触发告警）
+### 4. 上报水位（超警戒水位，将触发告警）
 
 ```bash
 curl -X POST http://localhost:3000/api/water-level \
   -H "Content-Type: application/json" \
   -d '{
-    "station_id": 1,
+    "station_id": "PS001",
     "reporter": "李四",
     "water_level": 4.0,
     "rainfall": 50.5,
@@ -143,13 +149,13 @@ curl -X POST http://localhost:3000/api/water-level \
 
 > PS001 号泵站警戒线为 3.5 米，上报 4.0 米将超过警戒线，如果 10 分钟内无开泵记录，会自动生成告警。
 
-### 4. 确认开泵
+### 5. 确认开泵
 
 ```bash
 curl -X POST http://localhost:3000/api/pump-operations \
   -H "Content-Type: application/json" \
   -d '{
-    "station_id": 1,
+    "station_id": "PS001",
     "pump_number": 1,
     "operator_name": "王五",
     "operation_type": "start",
@@ -158,13 +164,19 @@ curl -X POST http://localhost:3000/api/pump-operations \
   }'
 ```
 
-### 5. 查询待处理告警
+### 6. 查询待处理告警
 
 ```bash
 curl http://localhost:3000/api/alerts/pending
 ```
 
-### 6. 处理告警
+### 7. 查询告警统计
+
+```bash
+curl http://localhost:3000/api/alerts/statistics
+```
+
+### 8. 处理告警
 
 ```bash
 curl -X PUT http://localhost:3000/api/alerts/1/handle \
@@ -176,18 +188,25 @@ curl -X PUT http://localhost:3000/api/alerts/1/handle \
   }'
 ```
 
-### 7. 上报故障
+### 9. 上报故障
 
 ```bash
 curl -X POST http://localhost:3000/api/faults \
   -H "Content-Type: application/json" \
   -d '{
-    "station_id": 1,
+    "station_id": "PS001",
     "pump_number": 2,
     "fault_type": "mechanical",
-    "fault_description": "水泵异响",
+    "fault_level": "medium",
+    "description": "水泵异响",
     "reporter": "钱七"
   }'
+```
+
+### 10. 查询未处理故障
+
+```bash
+curl http://localhost:3000/api/faults/station/PS001/unresolved
 ```
 
 ## 验证告警场景
@@ -198,11 +217,27 @@ curl -X POST http://localhost:3000/api/faults \
 npm run test-alert
 ```
 
+支持通过环境变量配置 API 地址：
+
+```bash
+# 自定义端口
+PORT=8080 npm run test-alert
+
+# 自定义 API 基地址
+API_BASE=http://192.168.1.100:3000/api npm run test-alert
+```
+
 脚本会自动执行以下步骤：
 1. 清理旧数据
-2. 确认泵站警戒线（3.5 米）
-3. 上报超警戒水位 4.0 米
-4. 查询告警列表，验证告警已生成
+2. 确认初始状态无待处理告警
+3. 防汛值班员签到
+4. 上报超警戒水位 4.0 米（PS001 泵站警戒线 3.5 米）
+5. 验证告警已生成并检查详情
+6. 验证待处理告警列表和统计
+7. 泵站司机确认开泵，验证告警自动解决
+8. 验证业务规则：无人签到不能开泵
+9. 验证业务规则：故障泵不能参与调度
+10. 验证故障解除后可以正常开泵
 
 ## 数据库结构
 

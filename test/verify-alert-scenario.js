@@ -1,7 +1,8 @@
 const axios = require('axios');
 const { execute, query } = require('../src/db');
 
-const API_BASE = 'http://localhost:3000/api';
+const PORT = process.env.PORT || 3000;
+const API_BASE = process.env.API_BASE || `http://localhost:${PORT}/api`;
 
 async function clearTestData() {
   console.log('🧹 清理测试数据...');
@@ -19,7 +20,10 @@ async function clearTestData() {
 async function runScenario() {
   console.log('='.repeat(60));
   console.log('🧪 场景验证：录入超警戒水位后未开泵告警出现');
-  console.log('='.repeat(60) + '\n');
+  console.log('='.repeat(60));
+  console.log(`📍 API 地址: ${API_BASE}`);
+  console.log(`💡 可通过环境变量配置: API_BASE 或 PORT`);
+  console.log('');
   
   const stationId = 'PS001';
   const warningLevel = 3.5;

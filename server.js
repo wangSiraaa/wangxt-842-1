@@ -27,6 +27,7 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     status: 'running',
     endpoints: {
+      health: '/api/health',
       stations: '/api/stations',
       checkin: '/api/checkin',
       waterLevel: '/api/water-level',
@@ -34,6 +35,15 @@ app.get('/', (req, res) => {
       faults: '/api/faults',
       alerts: '/api/alerts'
     }
+  });
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
   });
 });
 
