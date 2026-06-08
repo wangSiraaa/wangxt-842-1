@@ -8,6 +8,7 @@ const waterLevelRoutes = require('./src/routes/waterLevel');
 const pumpOperationRoutes = require('./src/routes/pumpOperation');
 const faultsRoutes = require('./src/routes/faults');
 const alertsRoutes = require('./src/routes/alerts');
+const summaryRoutes = require('./src/routes/summary');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,7 +34,8 @@ app.get('/', (req, res) => {
       waterLevel: '/api/water-level',
       pumpOperation: '/api/pump-operations',
       faults: '/api/faults',
-      alerts: '/api/alerts'
+      alerts: '/api/alerts',
+      summary: '/api/summary'
     }
   });
 });
@@ -53,6 +55,7 @@ app.use('/api/water-level', waterLevelRoutes);
 app.use('/api/pump-operations', pumpOperationRoutes);
 app.use('/api/faults', faultsRoutes);
 app.use('/api/alerts', alertsRoutes);
+app.use('/api/summary', summaryRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
@@ -73,14 +76,21 @@ app.use((err, req, res, next) => {
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`\n🚀 城市内涝泵站值守 API 服务已启动`);
-    console.log(`📍 服务地址: http://localhost:${PORT}`);
-    console.log(`📚 API 文档: http://localhost:${PORT}/`);
-    console.log(`\n📌 预置泵站数据:`);
-    console.log(`   PS001 - 东城区一号泵站 (警戒线: 3.5米)`);
-    console.log(`   PS002 - 西城区二号泵站 (警戒线: 3.2米)`);
-    console.log(`   PS003 - 南城区三号泵站 (警戒线: 3.8米)`);
-    console.log(`   PS004 - 北城区四号泵站 (警戒线: 3.0米)`);
-    console.log(`\n🧪 运行测试: npm run test-alert`);
+  console.log(`📍 服务地址: http://localhost:${PORT}`);
+  console.log(`📚 API 文档: http://localhost:${PORT}/`);
+  console.log(`\n📌 预置泵站数据:`);
+  console.log(`   PS001 - 东城区一号泵站 (警戒线: 3.5米)`);
+  console.log(`   PS002 - 西城区二号泵站 (警戒线: 3.2米)`);
+  console.log(`   PS003 - 南城区三号泵站 (警戒线: 3.8米)`);
+  console.log(`   PS004 - 北城区四号泵站 (警戒线: 3.0米)`);
+  console.log(`\n📊 统计汇总 API:`);
+  console.log(`   GET /api/summary/overview      - 全局概览统计`);
+  console.log(`   GET /api/summary/by-station    - 按泵站统计`);
+  console.log(`   GET /api/summary/station/:id   - 单个泵站详情统计`);
+  console.log(`   GET /api/summary/daily         - 每日趋势统计`);
+  console.log(`   GET /api/summary/todo-list     - 待办事项列表`);
+  console.log(`\n🧪 运行测试: npm run test-alert`);
+  console.log(`🧪 完整测试: ./check-842.sh`);
   });
 }
 
